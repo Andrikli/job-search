@@ -1,9 +1,15 @@
 const express = require("express");
 const cors = require("cors");
 const admin = require("firebase-admin");
-const serviceAccount = require("./serviceAccountKey.json");
 const path = require('path');
-
+let serviceAccount;
+if (process.env.FIREBASE_JSON) {
+    // Якщо сервер на Render, беремо ключ із прихованих налаштувань
+    serviceAccount = JSON.parse(process.env.FIREBASE_JSON);
+} else {
+    // Якщо запускаємо локально на ПК, беремо з файлу
+    serviceAccount = require("./serviceAccountKey.json");
+}
 // Ініціалізація Firebase Admin SDK
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
