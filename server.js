@@ -3,6 +3,7 @@ const cors = require("cors");
 const admin = require("firebase-admin");
 const serviceAccount = require("./serviceAccountKey.json");
 const path = require('path');
+
 // Ініціалізація Firebase Admin SDK
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
@@ -11,27 +12,14 @@ admin.initializeApp({
 const db = admin.firestore();
 const app = express();
 
+// Налаштування middleware
 app.use(cors());
 app.use(express.json()); // для обробки JSON у POST-запитах
 
-// Твоя перша тестова точка (endpoint)
-app.get("/", (req, res) => {
-    res.send("Сервер JobSeeker працює!");
-});
+// Хостинг статичних файлів (React)
+app.use(express.static(path.join(__dirname, 'build')));
 
-const PORT = 5000;
-app.delete("/api/applications/:id", async (req, res) => {
-    try {
-        const appId = req.params.id;
-        await db.collection("applications").doc(appId).delete();
-        res.json({ message: "Заявку успішно видалено!" });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-app.listen(PORT, () => {
-    console.log(`Сервер запущено на http://localhost:${PORT}`);
-});
+
 // 1. Отримання всіх заявок користувача (HTTP GET)
 app.get("/api/applications/:email", async (req, res) => {
     try {
@@ -52,7 +40,7 @@ app.post("/api/apply", async (req, res) => {
     const { userEmail, jobId, jobTitle, company } = req.body;
 
     try {
-        // ВАЛІДАЦІЯ: Перевіряємо, чи є вже така заявка в БД (Завдання 4 вашого варіанта)
+        // ВАЛІДАЦІЯ: Перевіряємо, чи є вже така заявка в БД
         const checkSnapshot = await db.collection("applications")
             .where("userEmail", "==", userEmail)
             .where("jobId", "==", jobId)
@@ -78,12 +66,26 @@ app.post("/api/apply", async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-app.use(express.static(path.join(__dirname, 'build')));
 
-// Будь-який запит, що не стосується API, повертає React-сайт [cite: 252]
+// 3. Видалення заявки (HTTP DELETE)
+app.delete("/api/applications/:id", async (req, res) => {
+    try {
+        const appId = req.params.id;
+        await db.collection("applications").doc(appId).delete();
+        res.json({ message: "Заявку успішно видалено!" });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+// Будь-який запит, що не стосується API, повертає React-сайт
 app.get('/*', (req, res) => {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
+
+
+// Render динамічно призначає порт
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Сервер працює на порту ${PORT}`);
