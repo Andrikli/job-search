@@ -81,6 +81,10 @@ app.post("/api/apply", async (req, res) => {
 app.use(express.static(path.join(__dirname, 'build')));
 
 // Будь-який запит, що не стосується API, повертає React-сайт [cite: 252]
-app.get('*', (req, res) => {
+app.get('/*', (req, res) => {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Сервер працює на порту ${PORT}`);
 });
