@@ -77,13 +77,10 @@ app.delete("/api/applications/:id", async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-
-
 // Будь-який запит, що не стосується API, повертає React-сайт
-app.get('/*', (req, res) => {
+app.use((req, res) => {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
-
 
 // Render динамічно призначає порт
 const PORT = process.env.PORT || 5000;
