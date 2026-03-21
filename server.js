@@ -83,6 +83,32 @@ app.delete("/api/applications/:id", async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+// Отримання даних профілю
+app.get("/api/profile/:email", async (req, res) => {
+    try {
+        const userEmail = req.params.email;
+        const doc = await db.collection("profiles").doc(userEmail).get();
+
+        if (!doc.exists) {
+            // Якщо профілю немає, повертаємо порожній об'єкт (фронтенд підставить дефолт)
+            return res.json({});
+        }
+        res.json(doc.data());
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Збереження або оновлення профілю
+app.post("/api/profile", async (req, res) => {
+    const { email, ...profileData } = req.body;
+    try {
+        await db.collection("profiles").doc(email).set(profileData, { merge: true });
+        res.json({ message: "Профіль успішно збережено!" });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 // Будь-який запит, що не стосується API, повертає React-сайт
 app.use((req, res) => {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
